@@ -441,6 +441,7 @@ class UpdateWeightFromTensor:
                     post_process_quantization=False,
                     rollout_engines=self.rollout_engines,
                 )
+            ray.get([engine.begin_weight_update.remote() for engine in self.rollout_engines])
         dist.barrier(group=get_gloo_group())
 
         # Weights include base + LoRA adapter params (adapters are ordinary parameters).
@@ -489,6 +490,7 @@ class UpdateWeightFromTensor:
                     post_process_quantization=True,
                     rollout_engines=self.rollout_engines,
                 )
+            ray.get([engine.end_weight_update.remote() for engine in self.rollout_engines])
         dist.barrier(group=get_gloo_group())
 
         # 2) Register the LoRA adapter on the engines via SGLang's LoRA API. first_sync gates the
