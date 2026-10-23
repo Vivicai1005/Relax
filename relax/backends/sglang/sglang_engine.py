@@ -1876,6 +1876,17 @@ def _enable_draft_weights_cpu_backup(args, sglang_overrides: dict | None = None)
     return speculative_algorithm is not None
 
 
+def _server_arg_field_names() -> tuple[str, ...]:
+    """Return ServerArgs field names; newer SGLang defines it as a msgspec
+    Struct instead of a dataclass."""
+    if dataclasses.is_dataclass(ServerArgs):
+        return tuple(field.name for field in dataclasses.fields(ServerArgs))
+
+    import msgspec
+
+    return tuple(field.name for field in msgspec.structs.fields(ServerArgs))
+
+
 def _compute_genrm_server_args(
     args,
     rank,
@@ -1962,18 +1973,18 @@ def _compute_genrm_server_args(
     external_engine_need_check_fields = [k for k in kwargs.keys() if k not in _EXTERNAL_ENGINE_SKIP_CHECK_FIELDS]
 
     unused_keys = set(kwargs.keys())
-    for attr in dataclasses.fields(ServerArgs):
-        if worker_type == "decode" and attr.name == "enable_hierarchical_cache":
+    for name in _server_arg_field_names():
+        if worker_type == "decode" and name == "enable_hierarchical_cache":
             continue
-        if hasattr(args, f"sglang_{attr.name}") and attr.name not in kwargs:
-            kwargs[attr.name] = getattr(args, f"sglang_{attr.name}")
-        unused_keys.discard(attr.name)
+        if hasattr(args, f"sglang_{name}") and name not in kwargs:
+            kwargs[name] = getattr(args, f"sglang_{name}")
+        unused_keys.discard(name)
 
     # Per-genrm overrides from --genrm-engine-config. Applied after base args
     # and sglang_* defaults so user-supplied keys take highest priority. Keys
     # not recognized by the installed SGLang ServerArgs are dropped with a
     # warning rather than causing a TypeError at ServerArgs(**kwargs).
-    server_arg_fields = {f.name for f in dataclasses.fields(ServerArgs)}
+    server_arg_fields = set(_server_arg_field_names())
     for key, value in (args.genrm_engine_config or {}).items():
         if key not in server_arg_fields:
             logger.info(
@@ -2081,15 +2092,14 @@ def _compute_server_args(
         kwargs["dtype"] = "float16"
     external_engine_need_check_fields = [k for k in kwargs.keys() if k not in _EXTERNAL_ENGINE_SKIP_CHECK_FIELDS]
 
-    server_arg_fields = dataclasses.fields(ServerArgs)
-    server_arg_field_names = {attr.name for attr in server_arg_fields}
+    server_arg_field_names = _server_arg_field_names()
     unused_keys = set(kwargs.keys())
-    for attr in server_arg_fields:
-        if worker_type == "decode" and attr.name == "enable_hierarchical_cache":
+    for name in server_arg_field_names:
+        if worker_type == "decode" and name == "enable_hierarchical_cache":
             continue
-        if hasattr(args, f"sglang_{attr.name}") and attr.name not in kwargs:
-            kwargs[attr.name] = getattr(args, f"sglang_{attr.name}")
-        unused_keys.discard(attr.name)
+        if hasattr(args, f"sglang_{name}") and name not in kwargs:
+            kwargs[name] = getattr(args, f"sglang_{name}")
+        unused_keys.discard(name)
 
     # Per-engine-group overrides from --sglang-config YAML.
     # Applied after base args so they take highest priority.
