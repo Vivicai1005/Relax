@@ -30,6 +30,14 @@ except ImportError:
     # imports working, but fail closed if S3 streaming is requested.
     _SGLANG_LOAD_FORMAT_CHOICES = None
 
+try:
+    from sglang.srt.managers.io_struct import BeginWeightUpdateReqInput  # noqa: F401
+
+    _SGLANG_HAS_WEIGHT_UPDATE_SESSION = True
+except ImportError:
+    # Older SGLang accepts weight loads without an explicit update session.
+    _SGLANG_HAS_WEIGHT_UPDATE_SESSION = False
+
 from relax.distributed.checkpoint_service.client.engine import create_client
 from relax.distributed.ray.ray_actor import RayActor
 from relax.utils import device as device_utils
@@ -1666,6 +1674,25 @@ class SGLangEngine(RayActor):
         )
         response.raise_for_status()
         return response
+
+    def begin_weight_update(self):
+        """Open a weight-update session; newer SGLang rejects weight loads
+        outside one.
+
+        No-op on older SGLang.
+        """
+        if not _SGLANG_HAS_WEIGHT_UPDATE_SESSION:
+            return
+        return self._make_request("begin_weight_update", {})
+
+    def end_weight_update(self):
+        """Close the session opened by ``begin_weight_update``.
+
+        No-op on older SGLang.
+        """
+        if not _SGLANG_HAS_WEIGHT_UPDATE_SESSION:
+            return
+        return self._make_request("end_weight_update", {})
 
     def post_process_weights(
         self,
