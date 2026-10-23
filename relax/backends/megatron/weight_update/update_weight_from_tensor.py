@@ -275,6 +275,7 @@ class UpdateWeightFromTensor:
                     post_process_quantization=False,
                     rollout_engines=all_engines,
                 )
+            ray.get([engine.begin_weight_update.remote() for engine in all_engines])
         dist.barrier(group=get_gloo_group())
 
         megatron_local_weights = self.weights_getter()
@@ -357,6 +358,7 @@ class UpdateWeightFromTensor:
                     post_process_quantization=True,
                     rollout_engines=all_engines,
                 )
+            ray.get([engine.end_weight_update.remote() for engine in all_engines])
             ray.get([engine.continue_generation.remote() for engine in all_engines])
         dist.barrier(group=get_gloo_group())
 
