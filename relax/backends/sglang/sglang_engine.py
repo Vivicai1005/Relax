@@ -1,6 +1,7 @@
 # Copyright (c) 2026 Relax Authors. All Rights Reserved.
 
 import dataclasses
+import functools
 import ipaddress
 import json
 import multiprocessing
@@ -29,14 +30,6 @@ except ImportError:
     # Older SGLang releases do not expose the supported load formats. Keep
     # imports working, but fail closed if S3 streaming is requested.
     _SGLANG_LOAD_FORMAT_CHOICES = None
-
-try:
-    from sglang.srt.managers.io_struct import BeginWeightUpdateReqInput  # noqa: F401
-
-    _SGLANG_HAS_WEIGHT_UPDATE_SESSION = True
-except ImportError:
-    # Older SGLang accepts weight loads without an explicit update session.
-    _SGLANG_HAS_WEIGHT_UPDATE_SESSION = False
 
 from relax.distributed.checkpoint_service.client.engine import create_client
 from relax.distributed.ray.ray_actor import RayActor
@@ -1681,7 +1674,7 @@ class SGLangEngine(RayActor):
 
         No-op on older SGLang.
         """
-        if not _SGLANG_HAS_WEIGHT_UPDATE_SESSION:
+        if not _sglang_has_weight_update_session():
             return
         return self._make_request("begin_weight_update", {})
 
@@ -1690,7 +1683,7 @@ class SGLangEngine(RayActor):
 
         No-op on older SGLang.
         """
-        if not _SGLANG_HAS_WEIGHT_UPDATE_SESSION:
+        if not _sglang_has_weight_update_session():
             return
         return self._make_request("end_weight_update", {})
 
@@ -1874,6 +1867,19 @@ def _enable_draft_weights_cpu_backup(args, sglang_overrides: dict | None = None)
     if sglang_overrides and "speculative_algorithm" in sglang_overrides:
         speculative_algorithm = sglang_overrides["speculative_algorithm"]
     return speculative_algorithm is not None
+
+
+@functools.lru_cache(maxsize=None)
+def _sglang_has_weight_update_session() -> bool:
+    """Probe lazily: this module is imported by every process that parses args,
+    and importing ``io_struct`` there can pull torch_npu's torchair
+    ``all_reduce`` patch into train actors on Ascend, which rejects float64."""
+    try:
+        from sglang.srt.managers.io_struct import BeginWeightUpdateReqInput  # noqa: F401
+    except ImportError:
+        # Older SGLang accepts weight loads without an explicit update session.
+        return False
+    return True
 
 
 def _server_arg_field_names() -> tuple[str, ...]:
