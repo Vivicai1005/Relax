@@ -1877,7 +1877,8 @@ def _sglang_has_weight_update_session() -> bool:
     try:
         from sglang.srt.managers.io_struct import BeginWeightUpdateReqInput  # noqa: F401
     except ImportError:
-        # Older SGLang accepts weight loads without an explicit update session.
+        # SGLang < 0.5.21 accepts weight loads without an explicit update session.
+        # Weight-update sessions were added in 0.5.21 (sgl-project/sglang#40777).
         return False
     return True
 
@@ -1885,6 +1886,8 @@ def _sglang_has_weight_update_session() -> bool:
 def _server_arg_field_names() -> tuple[str, ...]:
     """Return ServerArgs field names; newer SGLang defines it as a msgspec
     Struct instead of a dataclass."""
+    # SGLang < 0.5.20 defines ServerArgs as a dataclass; 0.5.20 switched it to
+    # a msgspec.Struct (sgl-project/sglang#38753).
     if dataclasses.is_dataclass(ServerArgs):
         return tuple(field.name for field in dataclasses.fields(ServerArgs))
 
