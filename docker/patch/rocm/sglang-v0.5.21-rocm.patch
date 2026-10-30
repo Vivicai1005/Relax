@@ -1,0 +1,35 @@
+diff --git a/python/sglang/srt/models/qwen3.py b/python/sglang/srt/models/qwen3.py
+index 2939fc608d..231db0302d 100644
+--- a/python/sglang/srt/models/qwen3.py
++++ b/python/sglang/srt/models/qwen3.py
+@@ -53,7 +53,7 @@ if _use_aiter:
+     try:
+         from aiter import fused_qk_norm_mrope_3d_cache_pts_quant_shuffle
+ 
+-        _has_fused_qk_norm_mrope = True
++        _has_fused_qk_norm_mrope = False  # Relax ROCm: this aiter fused decode path breaks Qwen3-VL M-RoPE decode
+         logger.info("aiter fused_qk_norm_mrope_3d kernel available")
+     except ImportError:
+         pass
+diff --git a/python/sglang/srt/utils/hf_transformers_patches.py b/python/sglang/srt/utils/hf_transformers_patches.py
+index df6809cd6e..d09209c033 100644
+--- a/python/sglang/srt/utils/hf_transformers_patches.py
++++ b/python/sglang/srt/utils/hf_transformers_patches.py
+@@ -176,9 +176,14 @@ def _patch_rope_parameters_validation():
+         _orig_standardize = PretrainedConfig.standardize_rope_params
+ 
+         def _safe_standardize(self):
+-            if not hasattr(self, "max_position_embeddings"):
+-                return
+-            return _orig_standardize(self)
++            # The call must still run: it resolves `default_rope_type`, which
++            # Pixtral's vision config needs to reach "axial".
++            try:
++                return _orig_standardize(self)
++            except AttributeError as e:
++                if "max_position_embeddings" not in str(e):
++                    raise
++                return None
+ 
+         PretrainedConfig.standardize_rope_params = _safe_standardize
+ 
