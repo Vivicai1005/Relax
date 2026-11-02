@@ -87,19 +87,17 @@ See the [English installation guide](../docs/en/guide/installation.md) or [中�
 
 `docker/Dockerfile.rocm` targets AMD Instinct GPUs; `GPU_ARCH` selects the variant:
 
-| `GPU_ARCH`         | GPUs           | SGLang base image                      | Prebuilt wheels release |
-| ------------------ | -------------- | -------------------------------------- | ----------------------- |
-| `gfx950` (default) | MI350X, MI355X | `lmsysorg/sglang:v0.5.21-rocm10-mi35x` | `rocm10-gfx950-v0.5.18` |
-| `gfx942`           | MI300X, MI325X | `lmsysorg/sglang:v0.5.21-rocm10-mi30x` | `rocm10-gfx942-v0.5.20` |
-
-The base is SGLang's official ROCm 10 image (Ubuntu 24.04, ROCm 10 SDK wheels, torch 2.11, aiter), pinned by digest. SGLang 0.5.21 receives the same `docker/patch/sglang/v0.5.21.patch` and Rust tree core as `docker/Dockerfile.cu13`, followed by the ROCm fixes in `docker/patch/rocm/`; the patched router and the Megatron patch sequence also match. Transformer Engine, apex and flash-attn come from the prebuilt wheels used by miles' ROCm image, checked against their release digests.
+| `GPU_ARCH`         | GPUs           | SGLang base image                      |
+| ------------------ | -------------- | -------------------------------------- |
+| `gfx950` (default) | MI350X, MI355X | `lmsysorg/sglang:v0.5.21-rocm10-mi35x` |
+| `gfx942`           | MI300X, MI325X | `lmsysorg/sglang:v0.5.21-rocm10-mi30x` |
 
 ```bash
 docker build -f docker/Dockerfile.rocm -t relax:dev-rocm-gfx950 .
 docker build -f docker/Dockerfile.rocm --build-arg GPU_ARCH=gfx942 -t relax:dev-rocm-gfx942 .
 ```
 
-The image installs `requirements.txt` without its NumPy 1, PyArrow, huggingface_hub and av pins, which would downgrade the base's NumPy 2 stack, plus the ROCm additions in `docker/rocm-runtime-requirements.txt`.
+See the [English ROCm guide](../docs/en/guide/rocm.md) or [中文 ROCm 指南](../docs/zh/guide/rocm.md) for running containers and troubleshooting.
 
 ## Pre-Release Testing
 
