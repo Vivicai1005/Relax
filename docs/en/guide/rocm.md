@@ -3,7 +3,7 @@
 Relax runs on AMD Instinct GPUs through a ROCm Docker image built from `docker/Dockerfile.rocm`. The training scripts, launchers, and configuration are the same as on NVIDIA GPUs; the image supplies a ROCm build of the software stack underneath them:
 
 - **Base**: SGLang's official ROCm 10 image (Ubuntu 24.04, ROCm 10 SDK, PyTorch 2.11 for ROCm, aiter kernels), pinned by digest.
-- **SGLang 0.5.21** with the same Relax patch, Rust radix-tree cache, and DP-aware router as the CUDA 13 image, plus two ROCm fixes from `docker/patch/rocm/`.
+- **SGLang 0.5.21** with the same Relax patch, Rust radix-tree cache, and DP-aware router as the CUDA 13 image, plus a ROCm fix from `docker/patch/rocm/`.
 - **Megatron** built from the same Megatron-Bridge commit and patch sequence as the CUDA 13 image.
 - **Transformer Engine, apex, and flash-attn** as prebuilt ROCm wheels, checked against SHA-256 digests during the build.
 

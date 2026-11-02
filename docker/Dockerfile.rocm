@@ -4,7 +4,7 @@
 # The base is SGLang's official ROCm 10 image (docker/rocm.Dockerfile, SGL_BRANCH=v0.5.21,
 # GPU_ARCH=<arch>-rocm1000): Ubuntu 24.04, ROCm 10 SDK wheels, torch 2.11, aiter and SGLang.
 # SGLang, the router and Megatron receive the same Relax patches as Dockerfile.cu13, plus the ROCm
-# fixes in docker/patch/rocm. Transformer Engine, apex and flash-attn come from the prebuilt wheels
+# fix in docker/patch/rocm. Transformer Engine, apex and flash-attn come from the prebuilt wheels
 # of radixark/miles' ROCm image (docker/Dockerfile.rocm, variants rocm10-mi35x/mi30x).
 ARG GPU_ARCH=gfx950
 ARG BASE_IMAGE_GFX950=lmsysorg/sglang:v0.5.21-rocm10-mi35x@sha256:69616267bbeac9c70b69463a9a900e8101dcffa26f5d3fc321e769cb307c78be
@@ -114,8 +114,8 @@ RUN pip install --no-cache-dir --no-deps --target=/tmp/mc "mooncake-transfer-eng
     cp -n /tmp/mc/mooncake/*.py "$(python3 -c 'import mooncake, os; print(os.path.dirname(mooncake.__file__))')" && \
     rm -rf /tmp/mc
 
-# Relax's SGLang patch (shared with Dockerfile.cu13), then the ROCm fixes: disable the aiter fused
-# qk-norm+mrope decode path, which breaks Qwen3-VL, and keep Qwen3-Omni's vision rope "axial".
+# Relax's SGLang patch (shared with Dockerfile.cu13), then the ROCm fix: disable the aiter fused
+# qk-norm+mrope decode path, which breaks Qwen3-VL.
 # The base's editable install already used its ROCm pyproject.toml; Relax's Transformers and
 # tokenizers pins in that file are applied from rocm-runtime-requirements.txt instead.
 COPY docker/patch/sglang/v0.5.21.patch /tmp/sglang.patch

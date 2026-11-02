@@ -3,7 +3,7 @@
 Relax 可以通过基于 `docker/Dockerfile.rocm` 构建的 ROCm Docker 镜像运行在 AMD Instinct GPU 上。训练脚本、启动器和配置方式与 NVIDIA GPU 完全相同，区别只在于镜像提供了一套 ROCm 版本的底层软件栈：
 
 - **基础镜像**：SGLang 官方 ROCm 10 镜像（Ubuntu 24.04、ROCm 10 SDK、ROCm 版 PyTorch 2.11、aiter kernel），按 digest 固定版本。
-- **SGLang 0.5.21**：与 CUDA 13 镜像使用相同的 Relax 补丁、Rust radix-tree cache 和 DP-aware router，并额外应用 `docker/patch/rocm/` 中的两项 ROCm 修复。
+- **SGLang 0.5.21**：与 CUDA 13 镜像使用相同的 Relax 补丁、Rust radix-tree cache 和 DP-aware router，并额外应用 `docker/patch/rocm/` 中的一项 ROCm 修复。
 - **Megatron**：使用与 CUDA 13 镜像相同的 Megatron-Bridge commit 和补丁序列构建。
 - **Transformer Engine、apex 和 flash-attn**：使用预编译的 ROCm wheel，构建时会校验 SHA-256 摘要。
 
