@@ -97,7 +97,7 @@ docker build -f docker/Dockerfile.rocm -t relax:dev-rocm-gfx950 .
 docker build -f docker/Dockerfile.rocm --build-arg GPU_ARCH=gfx942 -t relax:dev-rocm-gfx942 .
 ```
 
-See the [English ROCm guide](../docs/en/guide/rocm.md) or [中文 ROCm 指南](../docs/zh/guide/rocm.md) for running containers and troubleshooting.
+See the [English ROCm guide](../docs/en/guide/rocm.md) or [中文 ROCm 指南](../docs/zh/guide/rocm.md) for running containers and training.
 
 ## Pre-Release Testing
 

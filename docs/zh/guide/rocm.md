@@ -87,24 +87,3 @@ bash scripts/training/text/run-qwen3-4B-8xgpu.sh
 | `SGLANG_RUST_BUILD_MODE` | `never` | 直接使用镜像中已编译好的 Rust radix-tree cache，而不是在每个新容器中重新编译。 |
 
 SGLang 基础镜像还通过 `SGLANG_USE_AITER=1` 启用了 aiter kernel。
-
-## 限制
-
-ROCm 镜像中不包含以下两个仅支持 CUDA 的组件：
-
-- **DeepEP**：使用 `--moe-flex-dispatcher-backend deepep` 和 `--moe-token-dispatcher-type flex` 的脚本，在 ROCm 上需要删除这两个参数，Megatron 将改用默认的 token dispatcher。这会影响部分 MoE 配方，例如 `scripts/training/text/run-qwen35-35B-A3B-8xgpu-colocate.sh`、`scripts/training/text/run-qwen3-30B-A3B-fp8-8xgpu.sh` 以及 Mini-SWE-Agent 示例。
-- **INT4 QAT 导出**：镜像未构建 `fake_int4_quant_cuda` 扩展，因此 `scripts/training/text/run-qwen3-30B-A3B-int4-8xgpu.sh` 等 INT4 QAT 配方无法在 ROCm 上运行。
-
-## 故障排除
-
-**任务停止后显存仍被占用。** 驱动释放被终止进程所占用的显存可能需要约一分钟。请使用 `rocm-smi --showmeminfo vram` 检查，待显存回落到空闲水平后再启动下一个任务。
-
-**长时间运行的容器中出现大量 `<defunct>` 进程。** 说明容器启动时没有加 `--init`。请使用 `--init` 重新创建容器；defunct 进程不占用显存，不会影响正在运行的任务。
-
-**构建在校验 wheel 时失败。** 参见[构建镜像](#构建镜像)：上游的预编译 wheel 已被替换，摘要不再匹配。
-
-## 下一步
-
-- [安装](./installation.md)：CUDA 镜像和源码安装
-- [快速上手](./quick-start.md)：运行示例任务
-- [Docker README](https://github.com/redai-studio/Relax/blob/main/docker/README.md)：镜像变体和构建细节

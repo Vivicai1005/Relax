@@ -87,24 +87,3 @@ The image sets these environment variables. Keep them unless you are debugging t
 | `SGLANG_RUST_BUILD_MODE` | `never` | Uses the Rust radix-tree cache built into the image instead of compiling one in every new container. |
 
 The SGLang base image also enables aiter kernels with `SGLANG_USE_AITER=1`.
-
-## Limitations
-
-Two CUDA-only components are not part of the ROCm image:
-
-- **DeepEP**: scripts that use `--moe-flex-dispatcher-backend deepep` with `--moe-token-dispatcher-type flex` need both flags removed on ROCm, which returns Megatron to its default token dispatcher. This applies to several MoE recipes, for example `scripts/training/text/run-qwen35-35B-A3B-8xgpu-colocate.sh`, `scripts/training/text/run-qwen3-30B-A3B-fp8-8xgpu.sh`, and the Mini-SWE-Agent example.
-- **INT4 QAT export**: the `fake_int4_quant_cuda` extension is not built, so INT4 QAT recipes such as `scripts/training/text/run-qwen3-30B-A3B-int4-8xgpu.sh` do not run on ROCm.
-
-## Troubleshooting
-
-**GPU memory is still allocated right after a job stops.** The driver can take a minute to release memory held by killed processes. Check `rocm-smi --showmeminfo vram` and wait until usage returns to its idle level before starting the next job.
-
-**Many `<defunct>` processes inside a long-running container.** The container was started without `--init`. Recreate it with `--init`; defunct processes hold no GPU memory, so a running job is not affected.
-
-**The build fails while verifying wheels.** See [Build the Image](#build-the-image): a prebuilt wheel changed upstream and its digest no longer matches.
-
-## Next Steps
-
-- [Installation](./installation.md): CUDA images and installation from source
-- [Quick Start](./quick-start.md): run the example tasks
-- [Docker README](https://github.com/redai-studio/Relax/blob/main/docker/README.md): image variants and build details
